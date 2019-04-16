@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Chat da Rocketseat</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <form id="chat">
+
+        <input type="text" name="username" placeholder="Digite seu usuário">
+            <div class="messages"></div> <!-- div que vai conter todas as mensagens enviadas por todos os usuários -->
+        <input type="text" name="message" placeholder="Digite sua mensagem">
+
+        <button type="submit">Enviar</button>
+    </form>
+
+<script>
+    // conectando com o nosso socket do Backend. Como o socket está no mesmo endereço podemos utilizar a mesma url (Obs: o 'io' está sendo definido pelo script que colocamos no "head")
+
+    const socket = io('http://localhost:3000')
+
+    // renderizando a mensagem enviada na tela
+    // $('.messages') = pegando a div "messages"
+
+    function renderMessage(message) {
+        $('.messages').append('<div class="message"><strong>'+ message.author +'</strong>: '+ message.message +'</div>')
+    }
+
+    // escutando o 'previousMessage' enviado pelo nosso backend
+
+    socket.on('previousMessage', function(messages) {
+
+        for (message of messages) {
+            renderMessage(message)
+        }
+
+    })
+
+    // escutando o 'receivedMessage' enviado pelo nosso backend 
+
+    socket.on('receivedMessage', function(message) {
+        renderMessage(message)
+    }) 
+
+    // verificar quando o chat é submitado
+    $('#chat').submit(function (e) {
+        e.preventDefault()
+
+        const author = $('input[name=username]').val()
+        const message = $('input[name=message]').val()
+
+        // verificação para ver se tem algum username e message digitada (length maior que 0)
+        if (author.length && message.length) {
+            const messageObject = {
+                author: author,
+                message: message
+            }
+
+            renderMessage(messageObject) // chamando a função renderMessage assim que fazemos o envio
+
+            socket.emit('sendMessage', messageObject) // dando um nome para esse evento e enviando o nosso messageObject
+            
+        }
+    }) 
+</script>
+
+</body>
+</html>
